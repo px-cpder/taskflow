@@ -513,4 +513,83 @@ public class TaskServiceImpl implements TaskService {
             case DONE, CANCELLED -> false;
         };
     }
+
+    /**
+     * 扫描并处理逾期任务
+     *
+     * <p>
+     * 业务规则：
+     * 1. 只扫描 TODO 和 IN_PROGRESS 状态的任务
+     * 2. 只扫描 deadline 小于当前时间的任务
+     * 3. 将符合条件的任务状态改为 OVERDUE
+     * 4. 每个被自动标记为逾期的任务都写入 task_log
+     * </p>
+     *
+     * @param batchSize 每次最多扫描处理的任务数量
+     * @return 本次成功标记为逾期的任务数量
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int scanAndMarkOverdueTasks(Integer batchSize) {
+        // 当前时间，用于判断任务是否已经超过截止时间
+        LocalDateTime now = LocalDateTime.now();
+
+        // 每次扫描的最大任务数量，防止一次性处理过多数据
+        int limit = batchSize == null || batchSize <= 0 ? 100 : batchSize;
+
+        // 查询条件：未完成、未取消、已超过截止时间的任务
+        LambdaQueryWrapper<Task> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Task::getStatus, TaskStatus.TODO.name(), TaskStatus.IN_PROGRESS.name())
+                .isNotNull(Task::getDeadline)
+                .lt(Task::getDeadline, now)
+                .orderByAsc(Task::getDeadline)
+                .last("LIMIT " + limit);
+
+        // 待处理的逾期任务列表
+        List<Task> overdueTasks = taskMapper.selectList(wrapper);
+
+        // 本次成功处理的任务数量
+        int successCount = 0;
+
+        for (Task task : overdueTasks) {
+            // 原始任务状态，用于写入日志
+            String oldStatus = task.getStatus();
+
+            // 将任务状态修改为逾期
+            task.setStatus(TaskStatus.OVERDUE.name());
+
+            // 逾期任务不是完成状态，所以完成时间应为空
+            task.setCompletedAt(null);
+
+            // 更新任务。这里会配合 @Version 做乐观锁控制
+            int updated = taskMapper.updateById(task);
+
+            // 如果更新成功，再写入任务日志
+            if (updated > 0) {
+                TaskLog taskLog = new TaskLog();
+
+                // 当前被处理的任务ID
+                taskLog.setTaskId(task.getId());
+
+                // 定时任务自动处理，所以操作人固定为系统定时任务
+                taskLog.setOperatorName("系统定时任务");
+
+                // 记录旧状态和新状态
+                taskLog.setOldStatus(oldStatus);
+                taskLog.setNewStatus(TaskStatus.OVERDUE.name());
+
+                // 操作类型为任务逾期
+                taskLog.setOperationType(TaskOperationType.OVERDUE.name());
+
+                // 日志备注，说明是系统自动标记
+                taskLog.setRemark("任务超过截止时间，系统自动标记为逾期");
+
+                taskLogMapper.insert(taskLog);
+
+                successCount++;
+            }
+        }
+
+        return successCount;
+    }
 }

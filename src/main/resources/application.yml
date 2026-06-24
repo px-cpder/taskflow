@@ -30,6 +30,11 @@ mybatis-plus:
 knife4j:
   enable: true
 
+taskflow:
+  task:
+    scan-delay-ms: 5000
+    batch-size: 100
+
 
 
 

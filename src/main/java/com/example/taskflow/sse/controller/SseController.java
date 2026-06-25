@@ -3,6 +3,7 @@ package com.example.taskflow.sse.controller;
 import com.example.taskflow.common.result.ApiResult;
 import com.example.taskflow.sse.service.SseService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -11,6 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.nio.charset.StandardCharsets;
 
+@Tag(name = "SSE实时推送接口", description = "提供 SSE 长连接建立、心跳检测和在线连接数量查询功能")
 @RestController
 @RequestMapping("/api/sse")
 @RequiredArgsConstructor

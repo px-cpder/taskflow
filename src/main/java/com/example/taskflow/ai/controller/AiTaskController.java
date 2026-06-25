@@ -4,9 +4,11 @@ import com.example.taskflow.ai.dto.AiProcessRecordResponse;
 import com.example.taskflow.ai.service.AiTaskService;
 import com.example.taskflow.common.result.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "AI辅助处理接口", description = "提供任务拆解、任务总结、风险分析和 AI 处理记录查询功能")
 @RestController
 @RequiredArgsConstructor
 public class AiTaskController {

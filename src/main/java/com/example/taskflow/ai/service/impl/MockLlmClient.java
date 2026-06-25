@@ -1,16 +1,19 @@
 package com.example.taskflow.ai.service.impl;
 
 import com.example.taskflow.ai.service.LlmClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnProperty(prefix = "taskflow.ai", name = "provider", havingValue = "mock", matchIfMissing = true)
 public class MockLlmClient implements LlmClient {
 
     /**
      * 模拟大模型调用
      *
-     * 当前阶段不真正请求外部 AI 平台，而是根据 prompt 内容返回固定结果，
-     * 这样可以先把 AI 记录保存、任务总结回填、SSE 推送等后端流程跑通。
+     * 作用：
+     * 1. 本地开发时不消耗真实 API 额度
+     * 2. 在没有网络或没有 API Key 时仍然可以测试 AI 业务流程
      *
      * @param prompt 提示词
      * @return 模拟的大模型响应

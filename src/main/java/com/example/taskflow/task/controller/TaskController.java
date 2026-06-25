@@ -8,6 +8,7 @@ import com.example.taskflow.task.dto.TaskQueryRequest;
 import com.example.taskflow.task.dto.TaskResponse;
 import com.example.taskflow.task.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -16,6 +17,7 @@ import com.example.taskflow.task.dto.TaskUpdateRequest;
 import java.util.List;
 import com.example.taskflow.task.dto.TaskStatusUpdateRequest;
 
+@Tag(name = "任务管理接口", description = "提供任务创建、查询、修改、删除、状态流转和日志查询功能")
 @Validated
 @RestController
 @RequestMapping("/api/tasks")
